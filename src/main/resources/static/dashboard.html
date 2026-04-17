@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillSwap — Student Exchange Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #1D9E75;
+      --green-light: #E1F5EE;
+      --green-dark: #085041;
+      --amber: #BA7517;
+      --amber-light: #FAEEDA;
+      --blue: #185FA5;
+      --blue-light: #E6F1FB;
+      --coral: #D85A30;
+      --coral-light: #FAECE7;
+      --gray: #5F5E5A;
+      --gray-light: #F1EFE8;
+      --bg: #fafaf8;
+      --white: #ffffff;
+      --text: #2C2C2A;
+      --text-muted: #888780;
+      --border: rgba(0,0,0,0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 240px;
+      background: var(--text);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      padding: 0 12px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: #5DCAA5; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: rgba(255,255,255,0.55);
+      font-size: 14px;
+      font-weight: 400;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .nav-item.active { background: var(--green); color: #fff; font-weight: 500; }
+
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.07);
+      border-radius: var(--radius-sm);
+    }
+
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-info p { font-size: 13px; color: #fff; font-weight: 500; }
+    .user-info span { font-size: 11px; color: rgba(255,255,255,0.45); }
+
+    /* MAIN */
+    .main {
+      margin-left: 240px;
+      padding: 32px 36px;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .page-title span { color: var(--green); }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 8px 16px;
+      gap: 8px;
+      width: 220px;
+    }
+
+    .search-bar input {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: transparent;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .notif-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .stat-card.green::before { background: var(--green); }
+    .stat-card.amber::before { background: var(--amber); }
+    .stat-card.blue::before { background: var(--blue); }
+    .stat-card.coral::before { background: var(--coral); }
+
+    .stat-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+    .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* BADGE */
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .badge-pill.beginner { background: var(--amber-light); color: var(--amber); }
+    .badge-pill.active { background: var(--blue-light); color: var(--blue); }
+    .badge-pill.mentor { background: var(--green-light); color: var(--green-dark); }
+
+    .avail-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--white);
+      color: var(--text);
+    }
+
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot.green { background: #1D9E75; }
+    .dot.orange { background: #BA7517; }
+    .dot.red { background: #E24B4A; }
+
+    /* GRID */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .section-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .see-all {
+      font-size: 12px;
+      color: var(--green);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* SKILL CARDS */
+    .skill-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .skill-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .skill-item:hover { border-color: var(--green); background: var(--green-light); }
+
+    .skill-left { display: flex; align-items: center; gap: 12px; }
+
+    .skill-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .skill-name { font-size: 14px; font-weight: 500; }
+    .skill-meta { font-size: 12px; color: var(--text-muted); }
+
+    .skill-badge {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .skill-badge.beginner { background: var(--amber-light); color: var(--amber); }
+    .skill-badge.intermediate { background: var(--blue-light); color: var(--blue); }
+    .skill-badge.expert { background: var(--green-light); color: var(--green-dark); }
+
+    .req-btn {
+      font-size: 12px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--green);
+      color: var(--green);
+      background: transparent;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .req-btn:hover { background: var(--green); color: #fff; }
+
+    /* REQUESTS */
+    .req-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .req-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .req-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--green-light);
+      color: var(--green-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-family: 'Syne', sans-serif;
+    }
+
+    .req-info { flex: 1; }
+    .req-name { font-size: 13px; font-weight: 500; }
+    .req-skill { font-size: 12px; color: var(--text-muted); }
+
+    .status-pill {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .status-pill.pending { background: var(--amber-light); color: var(--amber); }
+    .status-pill.accepted { background: var(--green-light); color: var(--green-dark); }
+    .status-pill.rejected { background: #FCEBEB; color: #A32D2D; }
+
+    .action-btns { display: flex; gap: 6px; }
+
+    .accept-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--green-light);
+      color: var(--green);
+      cursor: pointer;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .reject-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: #FCEBEB;
+      color: #E24B4A;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* RECOMMENDATION */
+    .rec-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .rec-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .rec-item:hover { border-color: var(--blue); background: var(--blue-light); }
+
+    .rec-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--blue);
+      flex-shrink: 0;
+    }
+
+    .rec-text { font-size: 13px; font-weight: 500; flex: 1; }
+    .rec-arrow { font-size: 12px; color: var(--text-muted); }
+
+    /* POST SKILL FORM */
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--green); }
+
+    .submit-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .submit-btn:hover { background: var(--green-dark); }
+
+    /* SESSION CARDS */
+    .session-card {
+      padding: 14px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+
+    .session-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .session-title { font-size: 13px; font-weight: 500; }
+    .session-meta { font-size: 12px; color: var(--text-muted); }
+
+    /* TABS */
+    .tabs { display: flex; gap: 4px; margin-bottom: 18px; }
+    .tab {
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-weight: 400;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+    .tab.active { background: var(--green); color: #fff; font-weight: 500; }
+    .tab:hover:not(.active) { background: var(--green-light); color: var(--green-dark); }
+
+    /* LEADERBOARD */
+    .leader-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .leader-item:last-child { border-bottom: none; }
+    .rank { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; width: 24px; color: var(--text-muted); }
+    .rank.gold { color: #BA7517; }
+    .rank.silver { color: #888780; }
+    .rank.bronze { color: #D85A30; }
+    .leader-name { flex: 1; font-size: 13px; font-weight: 500; }
+    .leader-pts { font-size: 12px; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+
+    /* AVAILABILITY MODAL */
+    .avail-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px;
+      z-index: 99;
+      display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      min-width: 160px;
+    }
+
+    .avail-dropdown.open { display: block; }
+
+    .avail-opt {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+
+    .avail-opt:hover { background: var(--bg); }
+
+    .avail-wrap { position: relative; }
+
+    /* SUCCESS TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 999;
+      display: none;
+      border-left: 3px solid var(--green);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* PAGE SECTIONS */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; padding: 20px; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">Skill<span>Swap</span></div>
+
+  <a class="nav-item active" onclick="showPage('dashboard')">
+    <span class="nav-icon">◈</span> Dashboard
+  </a>
+  <a class="nav-item" onclick="showPage('skills')">
+    <span class="nav-icon">✦</span> Browse Skills
+  </a>
+  <a class="nav-item" onclick="showPage('requests')">
+    <span class="nav-icon">↕</span> Requests
+    <span id="req-count" style="margin-left:auto; background:#E24B4A; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; display:none;">2</span>
+  </a>
+  <a class="nav-item" onclick="showPage('sessions')">
+    <span class="nav-icon">◷</span> Sessions
+  </a>
+  <a class="nav-item" onclick="showPage('post')">
+    <span class="nav-icon">＋</span> Post Skill
+  </a>
+  <a class="nav-item" onclick="showPage('leaderboard')">
+    <span class="nav-icon">▲</span> Leaderboard
+  </a>
+  <script src="/script.js"></script>
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="avatar" id="sidebar-avatar">KS</div>
+      <div class="user-info">
+        <p id="sidebar-name">Keerthana</p>
+        <span id="sidebar-badge">Beginner</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page-section active">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Good morning, <span id="dash-name">Student</span> 👋</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Here's what's happening today</div>
+      </div>
+      <div class="topbar-right">
+        <div class="search-bar">
+          <span style="font-size:14px; color:var(--text-muted);">⌕</span>
+          <input type="text" placeholder="Search skills..." id="search-input" oninput="liveSearch()">
+        </div>
+        <div class="notif-btn">🔔</div>
+      </div>
+    </div>
+
+    <!-- BADGE + AVAILABILITY -->
+    <div class="badge-row">
+      <span class="badge-pill beginner" id="badge-display">🏅 Beginner</span>
+      <div class="avail-wrap">
+        <div class="avail-pill" onclick="toggleAvail()">
+          <div class="dot green" id="avail-dot"></div>
+          <span id="avail-text">Available</span>
+          <span style="font-size:11px; color:var(--text-muted);">▾</span>
+        </div>
+        <div class="avail-dropdown" id="avail-dropdown">
+          <div class="avail-opt" onclick="setAvail('Available','green')"><div class="dot green"></div> Available</div>
+          <div class="avail-opt" onclick="setAvail('Busy','orange')"><div class="dot orange"></div> Busy</div>
+          <div class="avail-opt" onclick="setAvail('Offline','red')"><div class="dot red"></div> Offline</div>
+        </div>
+      </div>
+      <div style="font-size:13px; color:var(--text-muted);">⭐ <span id="dash-rating">0.0</span> rating</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card green">
+        <div class="stat-label">Skills Posted</div>
+        <div class="stat-value" id="stat-skills">0</div>
+        <div class="stat-sub">Your contributions</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">Requests Sent</div>
+        <div class="stat-value" id="stat-requests">0</div>
+        <div class="stat-sub">Awaiting response</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Sessions Done</div>
+        <div class="stat-value" id="stat-sessions">0</div>
+        <div class="stat-sub">Learning hours</div>
+      </div>
+      <div class="stat-card coral">
+        <div class="stat-label">Active Students</div>
+        <div class="stat-value" id="stat-students">0</div>
+        <div class="stat-sub">On platform</div>
+      </div>
+    </div>
+
+    <!-- SKILLS + REQUESTS GRID -->
+    <div class="grid-2">
+      <!-- RECENT SKILLS -->
+      <div class="section-card">
+        <div class="section-head">
+          <div class="section-title">Available Skills</div>
+          <span class="see-all" onclick="showPage('skills')">See all →</span>
+        </div>
+        <div class="skill-list" id="dash-skills">
+          <div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">Loading skills...</div>
+        </div>
+      </div>
+
+      <!-- INCOMING REQUESTS -->
+      <div class="section-card">
+        <div class="section-head">
+          <div class="section-title">Incoming Requests</div>
+          <span class="see-all" onclick="showPage('requests')">See all →</span>
+        </div>
+        <div class="req-list" id="dash-requests">
+          <div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">No requests yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECOMMENDATIONS -->
+    <div class="section-card" style="margin-bottom:20px;">
+      <div class="section-head">
+        <div class="section-title">💡 Recommended for You</div>
+      </div>
+      <div class="grid-3" id="rec-grid">
+        <div style="color:var(--text-muted); font-size:13px;">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BROWSE SKILLS PAGE -->
+  <div id="page-skills" class="page-section">
+    <div class="topbar">
+      <div class="page-title">Browse <span>Skills</span></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="filterSkills('all', this)">All</div>
+      <div class="tab" onclick="filterSkills('Beginner', this)">Beginner</div>
+      <div class="tab" onclick="filterSkills('Intermediate', this)">Intermediate</div>
+      <div class="tab" onclick="filterSkills('Expert', this)">Expert</div>
+    </div>
+    <div class="section-card">
+      <div class="skill-list" id="all-skills-list">Loading...</div>
+    </div>
+  </div>
+
+  <!-- REQUESTS PAGE -->
+  <div id="page-requests" class="page-section">
+    <div class="topbar">
+      <div class="page-title">My <span>Requests</span></div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchReqTab('received', this)">Received</div>
+      <div class="tab" onclick="switchReqTab('sent', this)">Sent</div>
+    </div>
+    <div class="section-card">
+      <div class="req-list" id="all-requests-list">Loading...</div>
+    </div>
+  </div>
+
+  <!-- SESSIONS PAGE -->
+  <div id="page-sessions" class="page-section">
+    <div class="topbar">
+      <div class="page-title">My <span>Sessions</span></div>
+    </div>
+    <div class="section-card">
+      <div id="sessions-list">Loading...</div>
+    </div>
+  </div>
+
+  <!-- POST SKILL PAGE -->
+  <div id="page-post" class="page-section">
+    <div class="topbar">
+      <div class="page-title">Post a <span>Skill</span></div>
+    </div>
+    <div style="max-width:500px;">
+      <div class="section-card">
+        <div class="form-group">
+          <label>Skill Name</label>
+          <input type="text" id="p-skill-name" placeholder="e.g. Java, Python, DSA...">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="p-skill-desc" placeholder="What will you teach?">
+        </div>
+        <div class="form-group">
+          <label>Available Time</label>
+          <input type="text" id="p-skill-time" placeholder="e.g. Weekends 10am-12pm">
+        </div>
+        <div class="form-group">
+          <label>Skill Level</label>
+          <select id="p-skill-level">
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Expert</option>
+          </select>
+        </div>
+        <button class="submit-btn" onclick="postSkill()">Post Skill 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD PAGE -->
+  <div id="page-leaderboard" class="page-section">
+    <div class="topbar">
+      <div class="page-title">🏆 <span>Leaderboard</span></div>
+    </div>
+    <div class="section-card" style="max-width:500px;">
+      <div id="leaderboard-list">Loading...</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Done!</div>
+
+<script>
+  let currentStudentId = 1;
+  let allSkills = [];
+  const API = 'http://localhost:8080/api';
+
+  const recMap = {
+    "Java": ["Spring Boot","Hibernate","MySQL","DSA"],
+    "Python": ["Django","Machine Learning","Flask","NumPy"],
+    "HTML": ["CSS","JavaScript","React","Bootstrap"],
+    "JavaScript": ["React","Node.js","TypeScript","Vue"],
+    "C": ["C++","Data Structures","Java","Algorithms"],
+    "SQL": ["MySQL","PostgreSQL","Spring Data JPA","MongoDB"],
+    "React": ["Node.js","Redux","TypeScript","Next.js"],
+    "DSA": ["Java","C++","LeetCode","Competitive Programming"]
+  };
+
+  const skillIcons = {
+    "Java":"☕","Python":"🐍","HTML":"🌐","CSS":"🎨","JavaScript":"⚡",
+    "React":"⚛","SQL":"🗃","C":"©","C++":"➕","DSA":"🧩",
+    "Spring Boot":"🍃","MySQL":"🐬","Node.js":"🟢"
+  };
+
+  function getIcon(name) {
+    for(let k in skillIcons) if(name.toLowerCase().includes(k.toLowerCase())) return skillIcons[k];
+    return "📚";
+  }
+
+  function getColor(level) {
+    if(level==="Expert") return "var(--green-light)";
+    if(level==="Intermediate") return "var(--blue-light)";
+    return "var(--amber-light)";
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = '✓ ' + msg;
+    t.style.display = 'block';
+    setTimeout(()=> t.style.display='none', 2500);
+  }
+
+  function showPage(page) {
+    document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(el => {
+      if(el.getAttribute('onclick') && el.getAttribute('onclick').includes(page)) el.classList.add('active');
+    });
+    if(page==='skills') loadAllSkills();
+    if(page==='requests') loadAllRequests();
+    if(page==='sessions') loadSessions();
+    if(page==='leaderboard') loadLeaderboard();
+  }
+
+  function toggleAvail() {
+    document.getElementById('avail-dropdown').classList.toggle('open');
+  }
+
+  function setAvail(val, color) {
+    document.getElementById('avail-text').innerText = val;
+    document.getElementById('avail-dot').className = 'dot ' + color;
+    document.getElementById('avail-dropdown').classList.remove('open');
+    fetch(`${API}/students/${currentStudentId}/availability?availability=${val}`, {method:'PUT'})
+            .then(()=>showToast('Status updated to ' + val))
+            .catch(()=>showToast('Status updated to ' + val));
+  }
+
+  document.addEventListener('click', e => {
+    if(!e.target.closest('.avail-wrap')) {
+      document.getElementById('avail-dropdown').classList.remove('open');
+    }
+  });
+
+  function loadStudentProfile() {
+    fetch(`${API}/students/${currentStudentId}`)
+            .then(r=>r.json())
+            .then(s=>{
+              document.getElementById('dash-name').innerText = s.name || 'Student';
+              document.getElementById('sidebar-name').innerText = (s.name||'Student').split(' ')[0];
+              document.getElementById('sidebar-badge').innerText = s.badge || 'Beginner';
+              document.getElementById('dash-rating').innerText = (s.rating||0).toFixed(1);
+              let b = s.badge || 'Beginner';
+              let bp = document.getElementById('badge-display');
+              bp.innerText = '🏅 ' + b;
+              bp.className = 'badge-pill ' + (b==='Top Mentor'?'mentor':b==='Active Learner'?'active':'beginner');
+              let av = s.availability || 'Available';
+              document.getElementById('avail-text').innerText = av;
+              document.getElementById('avail-dot').className = 'dot ' + (av==='Available'?'green':av==='Busy'?'orange':'red');
+              let init = (s.name||'ST').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+              document.getElementById('sidebar-avatar').innerText = init;
+            }).catch(()=>{});
+  }
+
+  function loadDashboardSkills() {
+    fetch(`${API}/skills/all`)
+            .then(r=>r.json())
+            .then(skills=>{
+              allSkills = skills;
+              document.getElementById('stat-skills').innerText = skills.length;
+              let html = '';
+              skills.slice(0,4).forEach(sk=>{
+                html += `<div class="skill-item">
+          <div class="skill-left">
+            <div class="skill-icon" style="background:${getColor(sk.skillLevel)}">${getIcon(sk.skillName)}</div>
+            <div>
+              <div class="skill-name">${sk.skillName}</div>
+              <div class="skill-meta">${sk.student?.name||'Anonymous'} · ${sk.availableTime||'Flexible'}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="skill-badge ${(sk.skillLevel||'beginner').toLowerCase()}">${sk.skillLevel||'Beginner'}</span>
+            <button class="req-btn" onclick="sendRequest(${sk.student?.studentId||1})">Request</button>
+          </div>
+        </div>`;
+              });
+              document.getElementById('dash-skills').innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No skills posted yet</div>';
+              loadRecommendations(skills);
+            }).catch(()=>{
+      document.getElementById('dash-skills').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Connect backend to see skills</div>';
+    });
+  }
+
+  function loadRecommendations(skills) {
+    let recs = [];
+    if(skills && skills.length > 0) {
+      let name = skills[0].skillName;
+      recs = (recMap[name] || Object.values(recMap)[0]).slice(0,6);
+    } else {
+      recs = ["Spring Boot","React","MySQL","DSA","Docker","TypeScript"];
+    }
+    let html = '';
+    recs.forEach(r=>{
+      html += `<div class="rec-item" onclick="searchAndGo('${r}')">
+      <div class="rec-dot"></div>
+      <span class="rec-text">${r}</span>
+      <span class="rec-arrow">→</span>
+    </div>`;
+    });
+    document.getElementById('rec-grid').innerHTML = html;
+  }
+
+  function searchAndGo(skill) {
+    document.getElementById('search-input').value = skill;
+    showPage('skills');
+    setTimeout(()=>filterByName(skill), 100);
+  }
+
+  function loadDashboardRequests() {
+    fetch(`${API}/requests/received/${currentStudentId}`)
+            .then(r=>r.json())
+            .then(reqs=>{
+              document.getElementById('stat-requests').innerText = reqs.length;
+              let pending = reqs.filter(r=>r.status==='PENDING');
+              if(pending.length > 0) {
+                document.getElementById('req-count').style.display='inline';
+                document.getElementById('req-count').innerText = pending.length;
+              }
+              let html = '';
+              reqs.slice(0,3).forEach(req=>{
+                let init = (req.sender?.name||'ST').slice(0,2).toUpperCase();
+                html += `<div class="req-item">
+          <div class="req-avatar">${init}</div>
+          <div class="req-info">
+            <div class="req-name">${req.sender?.name||'Student'}</div>
+            <div class="req-skill">${req.skillName}</div>
+          </div>
+          <span class="status-pill ${(req.status||'pending').toLowerCase()}">${req.status}</span>
+          ${req.status==='PENDING'?`<div class="action-btns">
+            <button class="accept-btn" onclick="updateReq(${req.requestId},'ACCEPTED')">✓</button>
+            <button class="reject-btn" onclick="updateReq(${req.requestId},'REJECTED')">✕</button>
+          </div>`:''}
+        </div>`;
+              });
+              document.getElementById('dash-requests').innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No incoming requests</div>';
+            }).catch(()=>{
+      document.getElementById('dash-requests').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No requests yet</div>';
+    });
+  }
+
+  function loadStudentsCount() {
+    fetch(`${API}/students/all`)
+            .then(r=>r.json())
+            .then(s=>{ document.getElementById('stat-students').innerText = s.length; })
+            .catch(()=>{});
+  }
+
+  function loadAllSkills(filter) {
+    fetch(`${API}/skills/all`)
+            .then(r=>r.json())
+            .then(skills=>{
+              allSkills = skills;
+              let filtered = filter && filter!=='all' ? skills.filter(s=>s.skillLevel===filter) : skills;
+              renderSkillList(filtered, 'all-skills-list');
+            }).catch(()=>{
+      document.getElementById('all-skills-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Backend not connected</div>';
+    });
+  }
+
+  function renderSkillList(skills, containerId) {
+    let html = '';
+    skills.forEach(sk=>{
+      html += `<div class="skill-item">
+      <div class="skill-left">
+        <div class="skill-icon" style="background:${getColor(sk.skillLevel)}">${getIcon(sk.skillName)}</div>
+        <div>
+          <div class="skill-name">${sk.skillName}</div>
+          <div class="skill-meta">${sk.student?.name||'Anonymous'} · ${sk.availableTime||'Flexible'} · ${sk.description||''}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="skill-badge ${(sk.skillLevel||'beginner').toLowerCase()}">${sk.skillLevel||'Beginner'}</span>
+        <button class="req-btn" onclick="sendRequest(${sk.student?.studentId||1})">Request</button>
+      </div>
+    </div>`;
+    });
+    document.getElementById(containerId).innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No skills found</div>';
+  }
+
+  function filterSkills(level, el) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    loadAllSkills(level);
+  }
+
+  function filterByName(name) {
+    let filtered = allSkills.filter(s=>s.skillName.toLowerCase().includes(name.toLowerCase()));
+    renderSkillList(filtered, 'all-skills-list');
+  }
+
+  function liveSearch() {
+    let q = document.getElementById('search-input').value;
+    if(q.length < 1) { loadDashboardSkills(); return; }
+    fetch(`${API}/skills/search?keyword=${q}`)
+            .then(r=>r.json())
+            .then(skills=>{ allSkills = skills; renderSkillList(skills,'all-skills-list'); })
+            .catch(()=>{});
+  }
+
+  function loadAllRequests(tab) {
+    tab = tab || 'received';
+    let url = tab==='received' ? `${API}/requests/received/${currentStudentId}` : `${API}/requests/sent/${currentStudentId}`;
+    fetch(url)
+            .then(r=>r.json())
+            .then(reqs=>{
+              let html = '';
+              reqs.forEach(req=>{
+                let init = (tab==='received' ? req.sender?.name : req.receiver?.name)||'ST';
+                init = init.slice(0,2).toUpperCase();
+                let person = tab==='received' ? req.sender?.name : req.receiver?.name;
+                html += `<div class="req-item">
+          <div class="req-avatar">${init}</div>
+          <div class="req-info">
+            <div class="req-name">${person||'Student'}</div>
+            <div class="req-skill">${req.skillName}</div>
+          </div>
+          <span class="status-pill ${(req.status||'pending').toLowerCase()}">${req.status}</span>
+          ${tab==='received' && req.status==='PENDING'?`<div class="action-btns">
+            <button class="accept-btn" onclick="updateReq(${req.requestId},'ACCEPTED')">✓</button>
+            <button class="reject-btn" onclick="updateReq(${req.requestId},'REJECTED')">✕</button>
+          </div>`:''}
+        </div>`;
+              });
+              document.getElementById('all-requests-list').innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No requests</div>';
+            }).catch(()=>{
+      document.getElementById('all-requests-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No requests yet</div>';
+    });
+  }
+
+  function switchReqTab(tab, el) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    loadAllRequests(tab);
+  }
+
+  function updateReq(id, status) {
+    fetch(`${API}/requests/${id}/status?status=${status}`, {method:'PUT'})
+            .then(()=>{ showToast('Request ' + status); loadDashboardRequests(); loadAllRequests(); })
+            .catch(()=>{ showToast('Request ' + status); });
+  }
+
+  function sendRequest(receiverId) {
+    if(receiverId === currentStudentId) { showToast('Cannot request yourself!'); return; }
+    let req = {
+      sender:{studentId:currentStudentId},
+      receiver:{studentId:receiverId},
+      skillName:'Skill Request',
+      status:'PENDING'
+    };
+    fetch(`${API}/requests/send`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(req)
+    }).then(()=>showToast('Request sent!')).catch(()=>showToast('Request sent!'));
+  }
+
+  function loadSessions() {
+    fetch(`${API}/sessions/learner/${currentStudentId}`)
+            .then(r=>r.json())
+            .then(sessions=>{
+              document.getElementById('stat-sessions').innerText = sessions.filter(s=>s.status==='COMPLETED').length;
+              let html = '';
+              sessions.forEach(s=>{
+                html += `<div class="session-card">
+          <div class="session-top">
+            <span class="session-title">Session with ${s.teacher?.name||'Teacher'}</span>
+            <span class="status-pill ${(s.status||'scheduled').toLowerCase()}">${s.status}</span>
+          </div>
+          <div class="session-meta">${s.date||''} ${s.time||''} · ${s.mode||'Online'}</div>
+          ${s.rating?`<div style="margin-top:8px;font-size:12px;color:var(--amber);">${'⭐'.repeat(s.rating)} ${s.feedback||''}</div>`:''}
+        </div>`;
+              });
+              document.getElementById('sessions-list').innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No sessions yet. Send a request to get started!</div>';
+            }).catch(()=>{
+      document.getElementById('sessions-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No sessions yet</div>';
+    });
+  }
+
+  function postSkill() {
+    let name = document.getElementById('p-skill-name').value;
+    if(!name) { showToast('Enter skill name!'); return; }
+    let skill = {
+      skillName: name,
+      description: document.getElementById('p-skill-desc').value,
+      availableTime: document.getElementById('p-skill-time').value,
+      skillLevel: document.getElementById('p-skill-level').value,
+      student:{studentId:currentStudentId}
+    };
+    fetch(`${API}/skills/post`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(skill)
+    }).then(()=>{
+      showToast('Skill posted!');
+      document.getElementById('p-skill-name').value='';
+      document.getElementById('p-skill-desc').value='';
+      document.getElementById('p-skill-time').value='';
+      updateBadge();
+      showPage('dashboard');
+    }).catch(()=>showToast('Skill posted!'));
+  }
+
+  function updateBadge() {
+    fetch(`${API}/skills/all`)
+            .then(r=>r.json())
+            .then(skills=>{
+              let mine = skills.filter(s=>s.student?.studentId===currentStudentId).length;
+              fetch(`${API}/students/${currentStudentId}/badge?skillsPosted=${mine}&sessionsCompleted=0`,{method:'PUT'})
+                      .then(()=>loadStudentProfile()).catch(()=>{});
+            }).catch(()=>{});
+  }
+
+  function loadLeaderboard() {
+    fetch(`${API}/students/all`)
+            .then(r=>r.json())
+            .then(students=>{
+              let sorted = students.sort((a,b)=>(b.rating||0)-(a.rating||0));
+              let medals = ['gold','silver','bronze'];
+              let html = '';
+              sorted.forEach((s,i)=>{
+                let init = (s.name||'ST').slice(0,2).toUpperCase();
+                html += `<div class="leader-item">
+          <span class="rank ${medals[i]||''}">${i+1}</span>
+          <div class="req-avatar" style="width:32px;height:32px;font-size:12px;">${init}</div>
+          <span class="leader-name">${s.name||'Student'} <span style="font-size:11px;color:var(--text-muted);">${s.department||''}</span></span>
+          <span class="badge-pill ${s.badge==='Top Mentor'?'mentor':s.badge==='Active Learner'?'active':'beginner'}" style="font-size:11px;padding:3px 10px;">${s.badge||'Beginner'}</span>
+          <span class="leader-pts">⭐ ${(s.rating||0).toFixed(1)}</span>
+        </div>`;
+              });
+              document.getElementById('leaderboard-list').innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No students yet</div>';
+            }).catch(()=>{
+      document.getElementById('leaderboard-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Loading leaderboard...</div>';
+    });
+  }
+
+  // INIT
+  window.onload = function() {
+    loadStudentProfile();
+    loadDashboardSkills();
+    loadDashboardRequests();
+    loadStudentsCount();
+  };
+</script>
+</body>
+</html>
