@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface SkillRepository extends JpaRepository<Skill, Long> {
     List<Skill> findBySkillNameContaining(String keyword);
+    List<Skill> findByStudent_StudentId(Long studentId);
 }

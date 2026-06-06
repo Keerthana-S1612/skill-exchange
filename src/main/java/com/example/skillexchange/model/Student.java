@@ -26,7 +26,7 @@ public class Student {
     private String badge;
 
     // ⭐ Innovation 2: Rating System
-    private double rating;
+    private Double rating;
 
     // ⏰ Innovation 3: Availability Status
     private String availability;

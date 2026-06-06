@@ -606,7 +606,6 @@
   <a class="nav-item" onclick="showPage('leaderboard')">
     <span class="nav-icon">▲</span> Leaderboard
   </a>
-  <script src="/script.js"></script>
   <div class="sidebar-footer">
     <div class="user-pill">
       <div class="avatar" id="sidebar-avatar">KS</div>
@@ -802,10 +801,40 @@
 <!-- TOAST -->
 <div class="toast" id="toast">✓ Done!</div>
 
+<!-- FEEDBACK MODAL -->
+<div id="feedback-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+  <div class="section-card" style="background:#fff; width:100%; max-width:400px; padding:30px; border-radius:var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+    <h3 class="section-title" style="font-size:18px; margin-bottom:15px; font-family:'Syne', sans-serif;">Complete & Rate Session</h3>
+    <div class="form-group">
+      <label>Rating (1 - 5 Stars)</label>
+      <select id="feedback-rating" style="width:100%;">
+        <option value="5">⭐⭐⭐⭐⭐ (Excellent)</option>
+        <option value="4">⭐⭐⭐⭐ (Very Good)</option>
+        <option value="3">⭐⭐⭐ (Average)</option>
+        <option value="2">⭐⭐ (Poor)</option>
+        <option value="1">⭐ (Very Poor)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Feedback</label>
+      <input type="text" id="feedback-text" placeholder="What did you learn? How was the teacher?">
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="submit-btn" id="btn-submit-feedback" style="flex:1;">Submit Feedback</button>
+      <button class="submit-btn" onclick="closeFeedbackModal()" style="flex:1; background:var(--gray-light); color:var(--text);">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  let currentStudentId = 1;
+  let currentStudentId = localStorage.getItem('studentId');
+  if (!currentStudentId) {
+    window.location.href = "login.html";
+  } else {
+    currentStudentId = parseInt(currentStudentId);
+  }
   let allSkills = [];
-  const API = 'http://localhost:8080/api';
+  const API = '/api';
 
   const recMap = {
     "Java": ["Spring Boot","Hibernate","MySQL","DSA"],
@@ -825,6 +854,7 @@
   };
 
   function getIcon(name) {
+    if(!name) return "📚";
     for(let k in skillIcons) if(name.toLowerCase().includes(k.toLowerCase())) return skillIcons[k];
     return "📚";
   }
@@ -906,13 +936,13 @@
           <div class="skill-left">
             <div class="skill-icon" style="background:${getColor(sk.skillLevel)}">${getIcon(sk.skillName)}</div>
             <div>
-              <div class="skill-name">${sk.skillName}</div>
-              <div class="skill-meta">${sk.student?.name||'Anonymous'} · ${sk.availableTime||'Flexible'}</div>
+              <div class="skill-name">${escapeHTML(sk.skillName)}</div>
+              <div class="skill-meta">${escapeHTML(sk.student?.name||'Anonymous')} · ${escapeHTML(sk.availableTime||'Flexible')}</div>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span class="skill-badge ${(sk.skillLevel||'beginner').toLowerCase()}">${sk.skillLevel||'Beginner'}</span>
-            <button class="req-btn" onclick="sendRequest(${sk.student?.studentId||1})">Request</button>
+            <span class="skill-badge ${(sk.skillLevel||'beginner').toLowerCase()}">${escapeHTML(sk.skillLevel||'Beginner')}</span>
+            <button class="req-btn" onclick="sendRequest(${sk.student?.studentId||1}, '${escapeJS(sk.skillName)}')">Request</button>
           </div>
         </div>`;
               });
@@ -933,9 +963,9 @@
     }
     let html = '';
     recs.forEach(r=>{
-      html += `<div class="rec-item" onclick="searchAndGo('${r}')">
+      html += `<div class="rec-item" onclick="searchAndGo('${escapeJS(r)}')">
       <div class="rec-dot"></div>
-      <span class="rec-text">${r}</span>
+      <span class="rec-text">${escapeHTML(r)}</span>
       <span class="rec-arrow">→</span>
     </div>`;
     });
@@ -957,17 +987,19 @@
               if(pending.length > 0) {
                 document.getElementById('req-count').style.display='inline';
                 document.getElementById('req-count').innerText = pending.length;
+              } else {
+                document.getElementById('req-count').style.display='none';
               }
               let html = '';
               reqs.slice(0,3).forEach(req=>{
                 let init = (req.sender?.name||'ST').slice(0,2).toUpperCase();
                 html += `<div class="req-item">
-          <div class="req-avatar">${init}</div>
+          <div class="req-avatar">${escapeHTML(init)}</div>
           <div class="req-info">
-            <div class="req-name">${req.sender?.name||'Student'}</div>
-            <div class="req-skill">${req.skillName}</div>
+            <div class="req-name">${escapeHTML(req.sender?.name||'Student')}</div>
+            <div class="req-skill">Wants to learn ${escapeHTML(req.skillName)}</div>
           </div>
-          <span class="status-pill ${(req.status||'pending').toLowerCase()}">${req.status}</span>
+          <span class="status-pill ${(req.status||'pending').toLowerCase()}">${escapeHTML(req.status)}</span>
           ${req.status==='PENDING'?`<div class="action-btns">
             <button class="accept-btn" onclick="updateReq(${req.requestId},'ACCEPTED')">✓</button>
             <button class="reject-btn" onclick="updateReq(${req.requestId},'REJECTED')">✕</button>
@@ -1006,13 +1038,13 @@
       <div class="skill-left">
         <div class="skill-icon" style="background:${getColor(sk.skillLevel)}">${getIcon(sk.skillName)}</div>
         <div>
-          <div class="skill-name">${sk.skillName}</div>
-          <div class="skill-meta">${sk.student?.name||'Anonymous'} · ${sk.availableTime||'Flexible'} · ${sk.description||''}</div>
+          <div class="skill-name">${escapeHTML(sk.skillName)}</div>
+          <div class="skill-meta">${escapeHTML(sk.student?.name||'Anonymous')} · ${escapeHTML(sk.availableTime||'Flexible')} · ${escapeHTML(sk.description||'')}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="skill-badge ${(sk.skillLevel||'beginner').toLowerCase()}">${sk.skillLevel||'Beginner'}</span>
-        <button class="req-btn" onclick="sendRequest(${sk.student?.studentId||1})">Request</button>
+        <span class="skill-badge ${(sk.skillLevel||'beginner').toLowerCase()}">${escapeHTML(sk.skillLevel||'Beginner')}</span>
+        <button class="req-btn" onclick="sendRequest(${sk.student?.studentId||1}, '${escapeJS(sk.skillName)}')">Request</button>
       </div>
     </div>`;
     });
@@ -1051,12 +1083,12 @@
                 init = init.slice(0,2).toUpperCase();
                 let person = tab==='received' ? req.sender?.name : req.receiver?.name;
                 html += `<div class="req-item">
-          <div class="req-avatar">${init}</div>
+          <div class="req-avatar">${escapeHTML(init)}</div>
           <div class="req-info">
-            <div class="req-name">${person||'Student'}</div>
-            <div class="req-skill">${req.skillName}</div>
+            <div class="req-name">${escapeHTML(person||'Student')}</div>
+            <div class="req-skill">Skill: ${escapeHTML(req.skillName)}</div>
           </div>
-          <span class="status-pill ${(req.status||'pending').toLowerCase()}">${req.status}</span>
+          <span class="status-pill ${(req.status||'pending').toLowerCase()}">${escapeHTML(req.status)}</span>
           ${tab==='received' && req.status==='PENDING'?`<div class="action-btns">
             <button class="accept-btn" onclick="updateReq(${req.requestId},'ACCEPTED')">✓</button>
             <button class="reject-btn" onclick="updateReq(${req.requestId},'REJECTED')">✕</button>
@@ -1081,12 +1113,12 @@
             .catch(()=>{ showToast('Request ' + status); });
   }
 
-  function sendRequest(receiverId) {
+  function sendRequest(receiverId, skillName) {
     if(receiverId === currentStudentId) { showToast('Cannot request yourself!'); return; }
     let req = {
       sender:{studentId:currentStudentId},
       receiver:{studentId:receiverId},
-      skillName:'Skill Request',
+      skillName: skillName || 'Skill Request',
       status:'PENDING'
     };
     fetch(`${API}/requests/send`, {
@@ -1097,49 +1129,144 @@
   }
 
   function loadSessions() {
-    fetch(`${API}/sessions/learner/${currentStudentId}`)
-            .then(r=>r.json())
-            .then(sessions=>{
-              document.getElementById('stat-sessions').innerText = sessions.filter(s=>s.status==='COMPLETED').length;
-              let html = '';
-              sessions.forEach(s=>{
-                html += `<div class="session-card">
-          <div class="session-top">
-            <span class="session-title">Session with ${s.teacher?.name||'Teacher'}</span>
-            <span class="status-pill ${(s.status||'scheduled').toLowerCase()}">${s.status}</span>
-          </div>
-          <div class="session-meta">${s.date||''} ${s.time||''} · ${s.mode||'Online'}</div>
-          ${s.rating?`<div style="margin-top:8px;font-size:12px;color:var(--amber);">${'⭐'.repeat(s.rating)} ${s.feedback||''}</div>`:''}
-        </div>`;
-              });
-              document.getElementById('sessions-list').innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No sessions yet. Send a request to get started!</div>';
-            }).catch(()=>{
-      document.getElementById('sessions-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">No sessions yet</div>';
-    });
+    const p1 = fetch(`${API}/sessions/learner/${currentStudentId}`).then(r => r.json());
+    const p2 = fetch(`${API}/sessions/teacher/${currentStudentId}`).then(r => r.json());
+
+    Promise.all([p1, p2])
+      .then(([learnerSessions, teacherSessions]) => {
+        let completedCount = learnerSessions.filter(s => s.status === 'COMPLETED').length +
+                             teacherSessions.filter(s => s.status === 'COMPLETED').length;
+        document.getElementById('stat-sessions').innerText = completedCount;
+
+        let html = '';
+
+        // Process learner sessions
+        learnerSessions.forEach(s => {
+          html += `
+            <div class="session-card" style="border-left: 4px solid var(--blue); margin-bottom: 12px; padding: 16px; background:#fdfdfd;">
+              <div class="session-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span class="session-title" style="font-weight:600; font-size:14px;">🎓 Learning: ${escapeHTML(s.skillName || 'Skill')} with ${escapeHTML(s.teacher?.name || 'Teacher')}</span>
+                <span class="status-pill ${(s.status || 'scheduled').toLowerCase()}">${escapeHTML(s.status)}</span>
+              </div>
+              <div class="session-meta" style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Date: ${escapeHTML(s.date || '')} ${escapeHTML(s.time || '')} | Mode: ${escapeHTML(s.mode || 'Online')}</div>
+              <div class="session-meta" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Meeting Link: <a href="${escapeHTML(s.meetingLink)}" target="_blank" style="color:var(--blue); font-weight:500;">Join Meeting</a></div>
+              ${s.status === 'SCHEDULED' ? `
+                <div style="margin-top:8px;">
+                  <button class="req-btn" style="border-color:var(--amber); color:var(--amber); padding:4px 10px; font-size:11px;" onclick="openFeedbackModal(${s.sessionId})">Complete & Rate Session</button>
+                </div>
+              ` : ''}
+              ${s.rating ? `
+                <div style="margin-top:8px; font-size:12px; color:var(--amber); font-weight:500; background:var(--amber-light); padding:6px 10px; border-radius:6px;">
+                  ${'⭐'.repeat(s.rating)} Rating Given | Feedback: "${escapeHTML(s.feedback || '')}"
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        // Process teacher sessions
+        teacherSessions.forEach(s => {
+          html += `
+            <div class="session-card" style="border-left: 4px solid var(--green); margin-bottom: 12px; padding: 16px; background:#fdfdfd;">
+              <div class="session-top" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span class="session-title" style="font-weight:600; font-size:14px;">🏫 Teaching: ${escapeHTML(s.skillName || 'Skill')} to ${escapeHTML(s.learner?.name || 'Learner')}</span>
+                <span class="status-pill ${(s.status || 'scheduled').toLowerCase()}">${escapeHTML(s.status)}</span>
+              </div>
+              <div class="session-meta" style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Date: ${escapeHTML(s.date || '')} ${escapeHTML(s.time || '')} | Mode: ${escapeHTML(s.mode || 'Online')}</div>
+              <div class="session-meta" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Meeting Link: <a href="${escapeHTML(s.meetingLink)}" target="_blank" style="color:var(--green); font-weight:500;">Start Meeting</a></div>
+              ${s.rating ? `
+                <div style="margin-top:8px; font-size:12px; color:var(--amber); font-weight:500; background:var(--amber-light); padding:6px 10px; border-radius:6px;">
+                  ${'⭐'.repeat(s.rating)} Rating Received | Feedback: "${escapeHTML(s.feedback || '')}"
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        document.getElementById('sessions-list').innerHTML = html || '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">No sessions booked yet. Request a skill to start!</div>';
+      })
+      .catch(err => {
+        document.getElementById('sessions-list').innerHTML = '<div style="color:var(--text-muted); font-size:13px; text-align:center; padding:20px;">Error loading sessions</div>';
+      });
   }
 
+  let activeFeedbackSessionId = null;
+
+  function openFeedbackModal(sessionId) {
+    activeFeedbackSessionId = sessionId;
+    document.getElementById('feedback-rating').value = "5";
+    document.getElementById('feedback-text').value = "";
+    document.getElementById('feedback-modal').style.display = 'flex';
+  }
+
+  function closeFeedbackModal() {
+    document.getElementById('feedback-modal').style.display = 'none';
+    activeFeedbackSessionId = null;
+  }
+
+  document.getElementById('btn-submit-feedback').onclick = function() {
+    if (!activeFeedbackSessionId) return;
+    const rating = document.getElementById('feedback-rating').value;
+    const feedback = document.getElementById('feedback-text').value.trim() || "Great session!";
+    
+    fetch(`${API}/sessions/${activeFeedbackSessionId}/feedback?rating=${rating}&feedback=${encodeURIComponent(feedback)}`, {
+      method: 'PUT'
+    })
+    .then(r => {
+      if (!r.ok) throw new Error("Failed to submit feedback");
+      showToast('Session completed and rated!');
+      closeFeedbackModal();
+      loadSessions();
+      loadStudentProfile();
+    })
+    .catch(err => {
+      showToast('Error rating session');
+      console.error(err);
+    });
+  };
+
   function postSkill() {
-    let name = document.getElementById('p-skill-name').value;
-    if(!name) { showToast('Enter skill name!'); return; }
+    let name = document.getElementById('p-skill-name').value.trim();
+    if (!name) {
+        showToast('Enter skill name!');
+        return;
+    }
+
     let skill = {
-      skillName: name,
-      description: document.getElementById('p-skill-desc').value,
-      availableTime: document.getElementById('p-skill-time').value,
-      skillLevel: document.getElementById('p-skill-level').value,
-      student:{studentId:currentStudentId}
+        skillName: name,
+        description: document.getElementById('p-skill-desc').value.trim(),
+        availableTime: document.getElementById('p-skill-time').value.trim(),
+        skillLevel: document.getElementById('p-skill-level').value,
+        student: {
+            studentId: currentStudentId
+        }
     };
+
     fetch(`${API}/skills/post`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(skill)
-    }).then(()=>{
-      showToast('Skill posted!');
-      document.getElementById('p-skill-name').value='';
-      document.getElementById('p-skill-desc').value='';
-      document.getElementById('p-skill-time').value='';
-      updateBadge();
-      showPage('dashboard');
-    }).catch(()=>showToast('Skill posted!'));
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(skill)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("POST failed");
+        }
+        return response.json();
+    })
+    .then(data => {
+        showToast('Skill posted successfully!');
+        document.getElementById('p-skill-name').value = '';
+        document.getElementById('p-skill-desc').value = '';
+        document.getElementById('p-skill-time').value = '';
+        loadDashboardSkills();
+        updateBadge();
+    })
+    .catch(error => {
+        console.error(error);
+        showToast('Error posting skill');
+    });
   }
 
   function updateBadge() {
@@ -1163,9 +1290,9 @@
                 let init = (s.name||'ST').slice(0,2).toUpperCase();
                 html += `<div class="leader-item">
           <span class="rank ${medals[i]||''}">${i+1}</span>
-          <div class="req-avatar" style="width:32px;height:32px;font-size:12px;">${init}</div>
-          <span class="leader-name">${s.name||'Student'} <span style="font-size:11px;color:var(--text-muted);">${s.department||''}</span></span>
-          <span class="badge-pill ${s.badge==='Top Mentor'?'mentor':s.badge==='Active Learner'?'active':'beginner'}" style="font-size:11px;padding:3px 10px;">${s.badge||'Beginner'}</span>
+          <div class="req-avatar" style="width:32px;height:32px;font-size:12px; display:flex; align-items:center; justify-content:center; background:var(--green-light); border-radius:50%;">${escapeHTML(init)}</div>
+          <span class="leader-name">${escapeHTML(s.name||'Student')} <span style="font-size:11px;color:var(--text-muted);">${escapeHTML(s.department||'')}</span></span>
+          <span class="badge-pill ${s.badge==='Top Mentor'?'mentor':s.badge==='Active Learner'?'active':'beginner'}" style="font-size:11px;padding:3px 10px;">${escapeHTML(s.badge||'Beginner')}</span>
           <span class="leader-pts">⭐ ${(s.rating||0).toFixed(1)}</span>
         </div>`;
               });
@@ -1173,6 +1300,18 @@
             }).catch(()=>{
       document.getElementById('leaderboard-list').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:20px;">Loading leaderboard...</div>';
     });
+  }
+
+  function escapeHTML(str) {
+    if (!str) return "";
+    return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+  }
+
+  function escapeJS(str) {
+    if (!str) return "";
+    return str.replace(/'/g, "\\'");
   }
 
   // INIT
