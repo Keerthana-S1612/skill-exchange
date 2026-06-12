@@ -1,0 +1,25 @@
+# -----------------------------------------------------------------------------
+# Skill Exchange App - AWS Infrastructure Configuration Variables
+# Rename this file to "terraform.tfvars" and customize the values below.
+# -----------------------------------------------------------------------------
+
+# [REQUIRED] The name of your AWS EC2 Key Pair (without the .pem extension).
+# e.g., if your key is saved locally as "my-key.pem", use: key_name = "my-key"
+key_name = "your-aws-key-pair-name"
+
+# [OPTIONAL] The AWS region to deploy your resources in.
+# Default: "ap-south-1" (Mumbai)
+aws_region = "ap-south-1"
+
+# [OPTIONAL] The EC2 instance type to provision.
+# Default: "t2.micro" (AWS Free Tier eligible)
+# Note: For production loads, a t3.small or t3.medium is recommended.
+instance_type = "t2.micro"
+
+# [OPTIONAL] The environment identifier. Used in tagging resources.
+# Default: "production"
+environment = "production"
+
+# [OPTIONAL] The application port matching the mapping of your docker-compose.
+# Default: 8080
+app_port = 8080

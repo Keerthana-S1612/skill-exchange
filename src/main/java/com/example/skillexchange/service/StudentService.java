@@ -14,6 +14,9 @@ public class StudentService {
     private StudentRepository studentRepository;
 
     public Student registerStudent(Student student) {
+        if (studentRepository.findFirstByEmail(student.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists!");
+        }
         // 🏆 Badge default
         student.setBadge("Beginner");
         // ⭐ Rating default
@@ -24,7 +27,7 @@ public class StudentService {
     }
 
     public Optional<Student> loginStudent(String email, String password) {
-        Optional<Student> student = studentRepository.findByEmail(email);
+        Optional<Student> student = studentRepository.findFirstByEmail(email);
         if (student.isPresent() && student.get().getPassword().equals(password)) {
             return student;
         }

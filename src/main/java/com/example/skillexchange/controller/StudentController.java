@@ -16,8 +16,12 @@ public class StudentController {
     private StudentService studentService;
 
     @PostMapping("/register")
-    public ResponseEntity<Student> register(@RequestBody Student student) {
-        return ResponseEntity.ok(studentService.registerStudent(student));
+    public ResponseEntity<?> register(@RequestBody Student student) {
+        try {
+            return ResponseEntity.ok(studentService.registerStudent(student));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/login")

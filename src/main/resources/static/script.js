@@ -309,7 +309,20 @@ function loadLeaderboard() {
         .then(response => response.json())
         .then(data => {
             board.innerHTML = "";
-            const sorted = data.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            
+            // Deduplicate students by name to show each user only once on the leaderboard
+            const seenNames = new Set();
+            const uniqueStudents = data.filter(student => {
+                if (!student.name) return true;
+                const nameKey = student.name.toLowerCase().trim();
+                if (seenNames.has(nameKey)) {
+                    return false;
+                }
+                seenNames.add(nameKey);
+                return true;
+            });
+
+            const sorted = uniqueStudents.sort((a, b) => (b.rating || 0) - (a.rating || 0));
             sorted.forEach((student, index) => {
                 board.innerHTML += `
                     <div class="leader-item">
